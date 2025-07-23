@@ -1,0 +1,16 @@
+syntax = "proto3";
+package api;
+
+service OctoRoasterAPI {
+	rpc Ping (PingRequest) returns (PingResponse);
+}
+
+message PingRequest {
+	string idempotencyToken = 1;
+}
+
+message PingResponse {
+	string message = 1;
+	string serverVersion = 2;
+	string idempotencyToken = 3;
+}
