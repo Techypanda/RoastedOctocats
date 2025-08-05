@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -20,7 +21,7 @@ type githubClient struct {
 }
 
 func (g *githubClient) clientSecret() string {
-	return config.New().ReadConfiguration("local").GetGithubSecret()
+	return config.New().ReadConfiguration(os.Getenv("APPLICATION_ENVIRONMENT")).GetGithubSecret()
 }
 
 func (g *githubClient) githubEndpoint(path string) string {

@@ -10,6 +10,7 @@ services:
       AZURE_TENANT_ID: ${AZURE_TENANT_ID}
       AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
       AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET}
+      APPLICATION_ENVIRONMENT: "local"
       BASEPATH: "/app"
     ports:
       - '8080:8080'
