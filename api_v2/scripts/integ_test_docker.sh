@@ -1,0 +1,3 @@
+#!/bin/sh
+echo "Running Integration Tests"
+go test -count=1 /app/test/integration/...

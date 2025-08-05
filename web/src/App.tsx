@@ -1,17 +1,28 @@
-import { MessageBar, MessageBarBody, MessageBarTitle } from '@fluentui/react-components';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HealthCheck } from './pages/HealthCheck';
+import { GatedHealthCheck } from './components/GatedHealthCheck';
+import { PageLayout } from './components/PageLayout';
+import { GithubAuth } from "./components/GithubAuth";
+import { GithubRoaster } from "./pages/GithubRoaster";
+import { BrowserRouter, Route, Routes } from "react-router";
+import { GithubRoasterResult } from "./pages/GithubRoasterResult";
+
 const queryClient = new QueryClient();
+
 function App() {
     return (
         <QueryClientProvider client={queryClient}>
-            {/*<MessageBar intent={'info'}>*/}
-            {/*    <MessageBarBody>*/}
-            {/*        <MessageBarTitle>Notice</MessageBarTitle>*/}
-            {/*        This application is currently under development and may not function as expected.*/}
-            {/*    </MessageBarBody>*/}
-            {/*</MessageBar>*/}
-            <HealthCheck />
+            <GatedHealthCheck>
+                <PageLayout>
+                    <GithubAuth>
+                        <BrowserRouter>
+                            <Routes>
+                                <Route path="*" element={<GithubRoaster />} />
+                                <Route path="/:idempotencyToken" element={<GithubRoasterResult />} />
+                            </Routes>
+                        </BrowserRouter>
+                    </GithubAuth>
+                </PageLayout>
+            </GatedHealthCheck>
         </QueryClientProvider>
     )
 }

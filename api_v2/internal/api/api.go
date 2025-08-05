@@ -1,0 +1,81 @@
+package api
+
+import (
+	"context"
+	"log/slog"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"techytechster.com/roastedoctocats/internal/github"
+	pkgapi "techytechster.com/roastedoctocats/pkg/api"
+	"techytechster.com/roastedoctocats/pkg/proto"
+)
+
+type octocatGrpcParseGithubJobWorkerParam struct {
+	Username         string
+	Bio              string
+	idempotencyToken string
+	githubOAuthToken string
+}
+
+type Status string
+
+const (
+	InProgress Status = "inProgress"
+	Failed     Status = "failed"
+	Complete   Status = "complete"
+)
+
+type asyncJobTableSchema struct {
+	status Status
+	err    *string
+	result *string
+}
+
+// dummy worker pool
+type octocatGrpcWorkerPool struct {
+	// define
+	parseGithubJobs chan octocatGrpcParseGithubJobWorkerParam
+}
+
+type octocatGrpcAPI struct {
+	tmpNoSqlStore map[string]asyncJobTableSchema
+	workerPool    octocatGrpcWorkerPool
+	proto.UnimplementedOctoRoasterAPIServer
+}
+
+func (o *octocatGrpcAPI) WhoAmI(ctx context.Context, req *proto.WhoAmIRequest) (*proto.WhoAmIResponse, error) {
+	slog.Debug("New WhoAmI Request")
+	client := github.New()
+	resp, err := client.WhoAmI(req.GithubToken)
+	if err != nil {
+		slog.Error("failed to do whoami", "err", err)
+		return nil, status.Errorf(codes.Unauthenticated, "Unauthorized")
+	}
+	return &proto.WhoAmIResponse{
+		Username: resp.Username,
+		Bio:      resp.Bio,
+	}, nil
+}
+
+func (o *octocatGrpcAPI) Ping(ctx context.Context, request *proto.PingRequest) (*proto.PingResponse, error) {
+	slog.Debug("New Ping Request", "idempotencyToken", request.IdempotencyToken)
+	return &proto.PingResponse{Message: pkgapi.PingResponseMessage}, nil
+}
+
+const poolSize int = 10
+
+func New() (proto.OctoRoasterAPIServer, context.CancelFunc) {
+	tmpNoSqlStore := map[string]asyncJobTableSchema{}
+	ctx, cancel := context.WithCancel(context.Background())
+	parseGithubJobs := make(chan octocatGrpcParseGithubJobWorkerParam, poolSize)
+	for i := range poolSize {
+		go parseGithubWorker(ctx, i, parseGithubJobs, tmpNoSqlStore)
+	}
+	return &octocatGrpcAPI{
+		workerPool: octocatGrpcWorkerPool{
+			parseGithubJobs: parseGithubJobs,
+		},
+		tmpNoSqlStore: tmpNoSqlStore,
+	}, cancel
+}

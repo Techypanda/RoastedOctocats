@@ -1,0 +1,70 @@
+syntax = "proto3";
+package roastedoctocat;
+option go_package = "./techytechster.com/pkg/proto";
+
+service OctoRoasterAPI {
+	rpc Ping (PingRequest) returns (PingResponse);
+	rpc OAuth (OAuthRequest) returns (OAuthResponse);
+	rpc Refresh (RefreshRequest) returns (OAuthResponse);
+	rpc WhoAmI (WhoAmIRequest) returns (WhoAmIResponse);
+	rpc ParseGithub (ParseGithubRequest) returns (ParseGithubResponse);
+	rpc GetParsedGithubResult (GetParsedGithubResultRequest) returns (GetParsedGithubResultResponse);
+}
+
+message GetParsedGithubResultRequest {
+	string githubToken = 1;
+	string idempotencyToken = 2;
+}
+
+message GetParsedGithubResultResponse {
+	string status = 1;
+	optional string result = 2;
+	optional string error = 3;
+}
+
+message ParseGithubRequest {
+	string githubToken = 1;
+	string idempotencyToken = 2;
+}
+
+message ParseGithubResponse {
+	string idempotencyToken = 1;
+}
+
+message WhoAmIRequest {
+	string githubToken = 1;
+}
+
+message WhoAmIResponse {
+	string username = 1;
+	string bio = 2;
+}
+
+message RefreshRequest {
+	string clientId = 1;
+	string refreshToken = 2;
+}
+
+message OAuthRequest {
+	string clientId = 1;
+	string code = 2;
+	string redirectUri = 3;
+	string codeChallenge = 4;
+}
+
+message OAuthResponse {
+	string accessToken = 1;
+	int32 accessTokenExpiry = 2;
+	string refreshToken = 3;
+	int32 refreshTokenExpiry = 4;
+}
+
+message PingRequest {
+	string idempotencyToken = 1;
+}
+
+message PingResponse {
+	string message = 1;
+	string serverVersion = 2;
+	string idempotencyToken = 3;
+}

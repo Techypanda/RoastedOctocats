@@ -1,0 +1,39 @@
+services:
+  api:
+    build:
+      context: .
+    environment:
+      ADDRESS: "0.0.0.0"
+      PORT: "8080"
+      ENABLE_DEBUG: "true"
+      GRPC_GO_LOG_VERBOSITY_LEVEL: 99
+      AZURE_TENANT_ID: ${AZURE_TENANT_ID}
+      AZURE_CLIENT_ID: ${AZURE_CLIENT_ID}
+      AZURE_CLIENT_SECRET: ${AZURE_CLIENT_SECRET}
+      BASEPATH: "/app"
+    ports:
+      - '8080:8080'
+  integ:
+    build:
+      context: .
+      dockerfile: Dockerfile.integ
+    volumes:
+      - .:/app
+    environment:
+      PORT: "8080"
+      ADDRESS: "api"
+      GRPC_GO_LOG_VERBOSITY_LEVEL: 99
+    depends_on:
+      - api
+    working_dir: /app
+    command: ['/app/scripts/integ_test_docker.sh']
+  envoy:
+    image: envoyproxy/envoy:v1.35-latest
+    volumes:
+        - ./configs/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+        - '8081:8081'
+        - '9901:9901'
+    command: ['/usr/local/bin/envoy', '-c', '/etc/envoy/envoy.yaml', '-l', 'trace', '--log-path', '/tmp/envoy_info.log']
+    depends_on:
+        - api

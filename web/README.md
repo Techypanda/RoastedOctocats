@@ -1,3 +1,7 @@
+### TEMP
+
+1.  npx protoc --ts_out src/proto --proto_path ../api_v2/proto ../api_v2/proto/*.proto
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
