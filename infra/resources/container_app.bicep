@@ -5,6 +5,73 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2025-01-31-p
   location: resourceGroup().location
 }
 
+resource tableAccount 'Microsoft.DocumentDB/databaseAccounts@2025-05-01-preview' = {
+  name: 'octocatroasterdb'
+  location: resourceGroup().location
+  kind: 'GlobalDocumentDB'
+  properties: {
+    capabilities: [
+      {
+        name: 'EnableTable'
+      }
+    ]
+    capacityMode: 'Serverless'
+    databaseAccountOfferType: 'Standard'
+    locations: [
+      {
+        failoverPriority: 0
+        isZoneRedundant: false
+        locationName: 'australiaeast'
+      }
+    ]
+  }
+}
+
+resource table 'Microsoft.DocumentDB/databaseAccounts/tables@2025-05-01-preview' = {
+  parent: tableAccount
+  name: 'octoroastertable'
+  location: resourceGroup().location
+  properties: {
+    resource: {
+      id: 'octoroastertable'
+      createMode: 'Default'
+    }
+  }
+}
+
+resource dbAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  name: guid(resourceGroup().id, 'octocatcontainer', 'DBAccess')
+  parent: tableAccount
+  properties: {
+    principalId: identity.properties.principalId  
+    // https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-grant-data-plane-access?tabs=built-in-definition%2Ccsharp&pivots=azure-interface-bicep#permission-model
+    roleDefinitionId: '/subscriptions/66a28eda-a79b-4181-b86b-3bac8e334da1/resourceGroups/OctoCatRoasterApp/providers/Microsoft.DocumentDB/databaseAccounts/octocatroasterdb/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+    scope: tableAccount.id
+  }
+}
+resource adminDBAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  name: guid(resourceGroup().id, 'octocatcontainer', 'AdminDBAccess')
+  parent: tableAccount
+  properties: {
+    // Jonathan object id
+    principalId: 'eb4d8a57-1f82-4ee2-8aa1-11e6894602e4'
+    // https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-grant-data-plane-access?tabs=built-in-definition%2Ccsharp&pivots=azure-interface-bicep#permission-model
+    roleDefinitionId: '/subscriptions/66a28eda-a79b-4181-b86b-3bac8e334da1/resourceGroups/OctoCatRoasterApp/providers/Microsoft.DocumentDB/databaseAccounts/octocatroasterdb/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+    scope: tableAccount.id
+  }
+}
+resource localManagedIdentityDBAssignment 'Microsoft.DocumentDB/databaseAccounts/sqlRoleAssignments@2024-05-15' = {
+  name: guid(resourceGroup().id, 'octocatcontainer', 'LocalDBAccess')
+  parent: tableAccount
+  properties: {
+    // techypanda-local-dev
+    principalId: 'e8bf2f09-8358-446c-9a5e-5ed365f09ff4'
+    // https://learn.microsoft.com/en-us/azure/cosmos-db/nosql/how-to-grant-data-plane-access?tabs=built-in-definition%2Ccsharp&pivots=azure-interface-bicep#permission-model
+    roleDefinitionId: '/subscriptions/66a28eda-a79b-4181-b86b-3bac8e334da1/resourceGroups/OctoCatRoasterApp/providers/Microsoft.DocumentDB/databaseAccounts/octocatroasterdb/sqlRoleDefinitions/00000000-0000-0000-0000-000000000002'
+    scope: tableAccount.id
+  }
+}
+
 // TODO: Deploy the OpenAI model in this RG and update permissions
 
 resource octocatregistry 'Microsoft.ContainerRegistry/registries@2024-11-01-preview' = {

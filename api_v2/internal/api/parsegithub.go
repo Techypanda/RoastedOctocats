@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
@@ -14,6 +13,7 @@ import (
 	"google.golang.org/grpc/status"
 	"techytechster.com/roastedoctocats/internal/config"
 	"techytechster.com/roastedoctocats/internal/github"
+	"techytechster.com/roastedoctocats/pkg/idb"
 	"techytechster.com/roastedoctocats/pkg/igithub"
 	"techytechster.com/roastedoctocats/pkg/proto"
 )
@@ -113,7 +113,7 @@ func askOpenAiPrompt(client *openai.Client, model string, input string) (*string
 	return &resp.Choices[0].Message.Content, nil
 }
 
-func parseGithubWorker(ctx context.Context, id int, jobs chan octocatGrpcParseGithubJobWorkerParam, nosqlStore map[string]asyncJobTableSchema) {
+func parseGithubWorker(ctx context.Context, id int, jobs chan octocatGrpcParseGithubJobWorkerParam, table idb.Database) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -121,35 +121,40 @@ func parseGithubWorker(ctx context.Context, id int, jobs chan octocatGrpcParseGi
 			return
 		case job := <-jobs:
 			slog.Info("worker processing", "id", id, "job", job)
-			if value, found := nosqlStore[fmt.Sprintf("%s:%s", job.Username, job.idempotencyToken)]; found && value.status != InProgress {
+			value, err := table.GetAnswer(ctx, job.Username, job.idempotencyToken)
+			if err != nil {
+				slog.Error("failed to get answer", "err", err)
+				return
+			}
+			if value.Status != idb.InProgress {
 				return
 			}
 			jsonData, err := callRelevantGithubAPIS(job) // get json
 			if err != nil {
 				errText := err.Error()
-				nosqlStore[fmt.Sprintf("%s:%s", job.Username, job.idempotencyToken)] = asyncJobTableSchema{
-					status: Failed,
-					err:    &errText,
-					result: nil,
+				err := table.SetAnswer(ctx, job.Username, job.idempotencyToken, idb.Failed, &errText, nil)
+				if err != nil {
+					slog.Error("failed to set answer", "err", err)
+					return
 				}
 				return
 			}
 			aiResponse, err := callAzureOpenAi(*jsonData) // get ai response
 			if err != nil {
 				errText := err.Error()
-				nosqlStore[fmt.Sprintf("%s:%s", job.Username, job.idempotencyToken)] = asyncJobTableSchema{
-					status: Failed,
-					err:    &errText,
-					result: nil,
+				err := table.SetAnswer(ctx, job.Username, job.idempotencyToken, idb.Failed, &errText, nil)
+				if err != nil {
+					slog.Error("failed to set answer", "err", err)
+					return
 				}
 				return
 			}
 			slog.Info("finished ai response saving to db", "id", id, "job", job)
-			nosqlStore[fmt.Sprintf("%s:%s", job.Username, job.idempotencyToken)] = asyncJobTableSchema{
-				status: Complete,
-				err:    nil,
-				result: aiResponse,
-			} // todo: save to cosmosdb
+			err = table.SetAnswer(ctx, job.Username, job.idempotencyToken, idb.Complete, nil, aiResponse)
+			if err != nil {
+				slog.Error("failed to set answer", "err", err)
+				return
+			}
 		}
 	}
 }
@@ -162,10 +167,10 @@ func (o *octocatGrpcAPI) ParseGithub(ctx context.Context, req *proto.ParseGithub
 		return nil, err
 	}
 	slog.Info("Spawning new ParseGithub Goroutine in background", "user", resp.Username, "idempotencyToken", req.IdempotencyToken)
-	o.tmpNoSqlStore[fmt.Sprintf("%s:%s", resp.Username, req.IdempotencyToken)] = asyncJobTableSchema{
-		status: InProgress,
-		result: nil,
-		err:    nil,
+	err = o.dbTable.SetAnswer(ctx, resp.Username, req.IdempotencyToken, idb.InProgress, nil, nil)
+	if err != nil {
+		slog.Error("failed to set answer", "err", err)
+		return nil, err
 	}
 	o.workerPool.parseGithubJobs <- octocatGrpcParseGithubJobWorkerParam{
 		Username: resp.Username,
@@ -186,26 +191,26 @@ func (o *octocatGrpcAPI) GetParsedGithubResult(ctx context.Context, req *proto.G
 	if err != nil {
 		return nil, err
 	}
-	res, found := o.tmpNoSqlStore[fmt.Sprintf("%s:%s", resp.Username, req.IdempotencyToken)]
-	if !found {
+	value, err := o.dbTable.GetAnswer(ctx, resp.Username, req.IdempotencyToken)
+	if err != nil {
 		slog.Error("no parsed github result for this user and token", "user", resp.Username, "token", req.IdempotencyToken)
 		return nil, status.Errorf(codes.NotFound, "No result")
 	}
-	if res.status == InProgress {
+	if value.Status == idb.InProgress {
 		slog.Info("still in progress for user and token", "user", resp.Username, "token", req.IdempotencyToken)
 		return &proto.GetParsedGithubResultResponse{
-			Status: string(InProgress),
+			Status: string(idb.InProgress),
 		}, nil
 	}
-	if res.status == Failed {
+	if value.Status == idb.Failed {
 		slog.Info("failed for user and token, returning failure", "user", resp.Username, "token", req.IdempotencyToken)
 		return &proto.GetParsedGithubResultResponse{
-			Status: string(Failed),
-			Error:  res.err,
+			Status: string(idb.Failed),
+			Error:  value.Err,
 		}, nil
 	}
 	return &proto.GetParsedGithubResultResponse{
-		Status: string(Complete),
-		Result: res.result,
+		Status: string(idb.Complete),
+		Result: value.Result,
 	}, nil
 }

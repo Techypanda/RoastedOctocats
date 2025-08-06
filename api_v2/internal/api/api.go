@@ -6,8 +6,10 @@ import (
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"techytechster.com/roastedoctocats/internal/db"
 	"techytechster.com/roastedoctocats/internal/github"
 	pkgapi "techytechster.com/roastedoctocats/pkg/api"
+	"techytechster.com/roastedoctocats/pkg/idb"
 	"techytechster.com/roastedoctocats/pkg/proto"
 )
 
@@ -18,20 +20,6 @@ type octocatGrpcParseGithubJobWorkerParam struct {
 	githubOAuthToken string
 }
 
-type Status string
-
-const (
-	InProgress Status = "inProgress"
-	Failed     Status = "failed"
-	Complete   Status = "complete"
-)
-
-type asyncJobTableSchema struct {
-	status Status
-	err    *string
-	result *string
-}
-
 // dummy worker pool
 type octocatGrpcWorkerPool struct {
 	// define
@@ -39,8 +27,8 @@ type octocatGrpcWorkerPool struct {
 }
 
 type octocatGrpcAPI struct {
-	tmpNoSqlStore map[string]asyncJobTableSchema
-	workerPool    octocatGrpcWorkerPool
+	dbTable    idb.Database
+	workerPool octocatGrpcWorkerPool
 	proto.UnimplementedOctoRoasterAPIServer
 }
 
@@ -66,16 +54,19 @@ func (o *octocatGrpcAPI) Ping(ctx context.Context, request *proto.PingRequest) (
 const poolSize int = 10
 
 func New() (proto.OctoRoasterAPIServer, context.CancelFunc) {
-	tmpNoSqlStore := map[string]asyncJobTableSchema{}
+	dbInstance, err := db.New()
+	if err != nil {
+		panic(err)
+	}
 	ctx, cancel := context.WithCancel(context.Background())
 	parseGithubJobs := make(chan octocatGrpcParseGithubJobWorkerParam, poolSize)
 	for i := range poolSize {
-		go parseGithubWorker(ctx, i, parseGithubJobs, tmpNoSqlStore)
+		go parseGithubWorker(ctx, i, parseGithubJobs, dbInstance)
 	}
 	return &octocatGrpcAPI{
 		workerPool: octocatGrpcWorkerPool{
 			parseGithubJobs: parseGithubJobs,
 		},
-		tmpNoSqlStore: tmpNoSqlStore,
+		dbTable: dbInstance,
 	}, cancel
 }
