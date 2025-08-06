@@ -22,6 +22,7 @@ export function GithubRoasterResult() {
             } while (response.status == "inProgress");
         }
     })
+    console.log(isError);
     return (
         <>
             {isLoading ? <Spinner /> : data?.result}

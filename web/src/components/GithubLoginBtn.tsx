@@ -72,7 +72,7 @@ const loginWithGithub = async () => {
     const state = v7();
     const url = new URL('https://github.com/login/oauth/authorize');
     url.searchParams.append('client_id', 'Iv23ligun1uyOZYdvxnq');
-    url.searchParams.append('redirect_uri', 'http://localhost:52986/postlogin');
+    url.searchParams.append('redirect_uri', `${window.location.origin}/postlogin`);
     url.searchParams.append('scope', '');
     url.searchParams.append('state', state)
     url.searchParams.append('code_challenge', shad)

@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from "react"
-import { BrowserRouter, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Route, Routes } from "react-router";
 import { GithubLoginButton } from "./GithubLoginBtn";
 import { makeStyles, MessageBar, MessageBarBody, MessageBarTitle, Spinner } from "@fluentui/react-components";
 import { useGrpcClient } from "../hooks/useGrpcClient";
@@ -11,6 +11,7 @@ const useGhStyle = makeStyles({
 });
 const RequiresGithubNotification = () => {
     const style = useGhStyle();
+    console.log(style);
     return (
         <>
             <MessageBar intent={'warning'}>
@@ -47,7 +48,7 @@ const exchangeForToken = async (client: OctoRoasterAPIClient) => {
         const { response } = await client.oAuth({
             clientId: "Iv23ligun1uyOZYdvxnq",
             code,
-            redirectUri: "http://localhost:52986/postlogin",
+            redirectUri: `${window.location.origin}/postlogin`,
             codeChallenge: json.original
         });
         const accessTokenExpiryTime = (new Date().valueOf()) + (response.accessTokenExpiry * 1000);

@@ -144,6 +144,10 @@ func (g *githubClient) WhoAmI(oauthToken string) (*igithub.WhoAmIResponse, error
 	if err != nil {
 		return nil, errors.Join(errLoginFailed, err)
 	}
+	if resp.StatusCode != 200 {
+		slog.Error("failed login", "resp", resp)
+		return nil, errors.Join(errLoginFailed)
+	}
 	var responseParsed map[string]interface{}
 	err = json.Unmarshal(respBytes, &responseParsed)
 	if err != nil {

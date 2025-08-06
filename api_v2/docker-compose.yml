@@ -1,5 +1,5 @@
 services:
-  api:
+  octoroastergrpc:
     build:
       context: .
     environment:
@@ -22,19 +22,19 @@ services:
       - .:/app
     environment:
       PORT: "8080"
-      ADDRESS: "api"
+      ADDRESS: "octoroastergrpc"
       GRPC_GO_LOG_VERBOSITY_LEVEL: 99
     depends_on:
-      - api
+      - octoroastergrpc
     working_dir: /app
     command: ['/app/scripts/integ_test_docker.sh']
   envoy:
-    image: envoyproxy/envoy:v1.35-latest
-    volumes:
-        - ./configs/envoy/envoy.yaml:/etc/envoy/envoy.yaml
+    build:
+     context: .
+     dockerfile: Dockerfile.envoy
     ports:
         - '8081:8081'
         - '9901:9901'
     command: ['/usr/local/bin/envoy', '-c', '/etc/envoy/envoy.yaml', '-l', 'trace', '--log-path', '/tmp/envoy_info.log']
     depends_on:
-        - api
+        - octoroastergrpc

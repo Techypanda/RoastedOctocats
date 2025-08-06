@@ -61,5 +61,5 @@ static_resources:
             - endpoint:
                 address:
                   socket_address:
-                    address: octoroastergrpc
+                    address: localhost # azure containers use localhost for inter container communication
                     port_value: 8080

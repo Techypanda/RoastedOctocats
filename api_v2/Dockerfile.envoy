@@ -1,0 +1,5 @@
+FROM envoyproxy/envoy:v1.35-latest AS envoy
+COPY configs/envoy/envoy.yaml /etc/envoy/envoy.yaml
+COPY configs/envoy/envoy_acs.yaml /etc/envoy/envoy_acs.yaml
+EXPOSE 8081
+EXPOSE 9901

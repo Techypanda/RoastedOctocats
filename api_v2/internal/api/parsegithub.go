@@ -200,7 +200,7 @@ func (o *octocatGrpcAPI) GetParsedGithubResult(ctx context.Context, req *proto.G
 	if res.status == Failed {
 		slog.Info("failed for user and token, returning failure", "user", resp.Username, "token", req.IdempotencyToken)
 		return &proto.GetParsedGithubResultResponse{
-			Status: string(InProgress),
+			Status: string(Failed),
 			Error:  res.err,
 		}, nil
 	}
