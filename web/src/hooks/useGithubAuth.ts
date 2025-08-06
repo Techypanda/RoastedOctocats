@@ -43,16 +43,24 @@ const refreshAccessTokenOnExpiry = (client: OctoRoasterAPIClient, setToken: Reac
 }
 
 const clearTokensOnRefreshExpiry = () => {
+    console.warn('refresh token expired, clearing storage')
     clearToken();
     window.location.reload();
+}
+
+const computeMillisecondsUntilExpiry = (d: Date) => {
+    // 2147483647 is the max value that setTimeout can handle
+    return Math.min(Math.max(d.valueOf() - new Date().valueOf(), 0), 2147483646);
 }
 
 export const useGithubAuth = () => {
     const [token, setToken] = useState(getToken());
     const client = useGrpcClient();
     if (token) {
-        setTimeout(refreshAccessTokenOnExpiry(client, setToken), token.accessTokenExpiry);
-        setTimeout(clearTokensOnRefreshExpiry, token.refreshTokenExpiry);
+        const accessTokenMs = computeMillisecondsUntilExpiry(new Date(token.accessTokenExpiry));
+        setTimeout(() => refreshAccessTokenOnExpiry(client, setToken)(), accessTokenMs);
+        const refreshTokenMs = computeMillisecondsUntilExpiry(new Date(token.refreshTokenExpiry));
+        setTimeout(() => clearTokensOnRefreshExpiry(), refreshTokenMs);
     }
     return { hasToken: !!token };
 }
