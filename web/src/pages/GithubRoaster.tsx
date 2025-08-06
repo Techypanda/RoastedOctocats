@@ -3,8 +3,19 @@ import { useGrpcClient } from "../hooks/useGrpcClient";
 import { getToken } from "../hooks/useGithubAuth";
 import { v7 } from "uuid";
 import { useNavigate } from "react-router";
+import { makeStyles, Button } from "@fluentui/react-components";
+
+const useStyle = makeStyles({
+    container: {
+        padding: '0 1rem 1rem 1rem'
+    },
+    button: {
+        marginTop: '0.5rem'
+    }
+})
 
 export const GithubRoaster = () => {
+    const style = useStyle();
     const client = useGrpcClient();
     const { data, isLoading } = useQuery({
         queryKey: ['user'],
@@ -27,9 +38,9 @@ export const GithubRoaster = () => {
         return <></>; // shouldn't be rendered ever
     }
     return (
-        <>
+        <div className={style.container}>
             <div>Hi {data?.response.username}, Click the button below to have your github reviewed</div>
-            <button onClick={() => doRoast()}>Roast Github</button>
-        </>
+            <Button className={style.button} onClick={() => doRoast()}>Roast Github</Button>
+        </div>
     )
 }
