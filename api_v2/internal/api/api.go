@@ -16,6 +16,7 @@ import (
 type octocatGrpcParseGithubJobWorkerParam struct {
 	Username         string
 	Bio              string
+	PromptType       proto.ModelPromptType
 	idempotencyToken string
 	githubOAuthToken string
 }

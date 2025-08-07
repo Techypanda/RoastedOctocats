@@ -1,5 +1,7 @@
 package iconfig
 
+import "techytechster.com/roastedoctocats/pkg/proto"
+
 type ApplicationConfig interface {
 	GetTestPem() string
 	GetPAT() string
@@ -7,6 +9,6 @@ type ApplicationConfig interface {
 }
 
 type ConfigReader interface {
-	GetModelPrompt() string
+	GetModelPrompt(promptType proto.ModelPromptType) string
 	ReadConfiguration(environment string) ApplicationConfig
 }

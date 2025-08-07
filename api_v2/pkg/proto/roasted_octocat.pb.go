@@ -21,6 +21,70 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ModelPromptType int32
+
+const (
+	ModelPromptType_ModelPromptType_EARLY2000s   ModelPromptType = 0
+	ModelPromptType_ModelPromptType_UWUIFIED     ModelPromptType = 1
+	ModelPromptType_ModelPromptType_NERD         ModelPromptType = 2
+	ModelPromptType_ModelPromptType_OLDENGLISH   ModelPromptType = 3
+	ModelPromptType_ModelPromptType_NICE         ModelPromptType = 4
+	ModelPromptType_ModelPromptType_REGINAGEORGE ModelPromptType = 5
+	ModelPromptType_ModelPromptType_DISCORDMOD   ModelPromptType = 6
+	ModelPromptType_ModelPromptType_DCVILLIAN    ModelPromptType = 7
+)
+
+// Enum value maps for ModelPromptType.
+var (
+	ModelPromptType_name = map[int32]string{
+		0: "ModelPromptType_EARLY2000s",
+		1: "ModelPromptType_UWUIFIED",
+		2: "ModelPromptType_NERD",
+		3: "ModelPromptType_OLDENGLISH",
+		4: "ModelPromptType_NICE",
+		5: "ModelPromptType_REGINAGEORGE",
+		6: "ModelPromptType_DISCORDMOD",
+		7: "ModelPromptType_DCVILLIAN",
+	}
+	ModelPromptType_value = map[string]int32{
+		"ModelPromptType_EARLY2000s":   0,
+		"ModelPromptType_UWUIFIED":     1,
+		"ModelPromptType_NERD":         2,
+		"ModelPromptType_OLDENGLISH":   3,
+		"ModelPromptType_NICE":         4,
+		"ModelPromptType_REGINAGEORGE": 5,
+		"ModelPromptType_DISCORDMOD":   6,
+		"ModelPromptType_DCVILLIAN":    7,
+	}
+)
+
+func (x ModelPromptType) Enum() *ModelPromptType {
+	p := new(ModelPromptType)
+	*p = x
+	return p
+}
+
+func (x ModelPromptType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ModelPromptType) Descriptor() protoreflect.EnumDescriptor {
+	return file_proto_roasted_octocat_proto_enumTypes[0].Descriptor()
+}
+
+func (ModelPromptType) Type() protoreflect.EnumType {
+	return &file_proto_roasted_octocat_proto_enumTypes[0]
+}
+
+func (x ModelPromptType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ModelPromptType.Descriptor instead.
+func (ModelPromptType) EnumDescriptor() ([]byte, []int) {
+	return file_proto_roasted_octocat_proto_rawDescGZIP(), []int{0}
+}
+
 type GetParsedGithubResultRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	GithubToken      string                 `protobuf:"bytes,1,opt,name=githubToken,proto3" json:"githubToken,omitempty"`
@@ -137,6 +201,7 @@ type ParseGithubRequest struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	GithubToken      string                 `protobuf:"bytes,1,opt,name=githubToken,proto3" json:"githubToken,omitempty"`
 	IdempotencyToken string                 `protobuf:"bytes,2,opt,name=idempotencyToken,proto3" json:"idempotencyToken,omitempty"`
+	PromptType       ModelPromptType        `protobuf:"varint,3,opt,name=promptType,proto3,enum=roastedoctocat.ModelPromptType" json:"promptType,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -183,6 +248,13 @@ func (x *ParseGithubRequest) GetIdempotencyToken() string {
 		return x.IdempotencyToken
 	}
 	return ""
+}
+
+func (x *ParseGithubRequest) GetPromptType() ModelPromptType {
+	if x != nil {
+		return x.PromptType
+	}
+	return ModelPromptType_ModelPromptType_EARLY2000s
 }
 
 type ParseGithubResponse struct {
@@ -630,10 +702,13 @@ const file_proto_roasted_octocat_proto_rawDesc = "" +
 	"\x06result\x18\x02 \x01(\tH\x00R\x06result\x88\x01\x01\x12\x19\n" +
 	"\x05error\x18\x03 \x01(\tH\x01R\x05error\x88\x01\x01B\t\n" +
 	"\a_resultB\b\n" +
-	"\x06_error\"b\n" +
+	"\x06_error\"\xa3\x01\n" +
 	"\x12ParseGithubRequest\x12 \n" +
 	"\vgithubToken\x18\x01 \x01(\tR\vgithubToken\x12*\n" +
-	"\x10idempotencyToken\x18\x02 \x01(\tR\x10idempotencyToken\"A\n" +
+	"\x10idempotencyToken\x18\x02 \x01(\tR\x10idempotencyToken\x12?\n" +
+	"\n" +
+	"promptType\x18\x03 \x01(\x0e2\x1f.roastedoctocat.ModelPromptTypeR\n" +
+	"promptType\"A\n" +
 	"\x13ParseGithubResponse\x12*\n" +
 	"\x10idempotencyToken\x18\x01 \x01(\tR\x10idempotencyToken\"1\n" +
 	"\rWhoAmIRequest\x12 \n" +
@@ -659,7 +734,16 @@ const file_proto_roasted_octocat_proto_rawDesc = "" +
 	"\fPingResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12$\n" +
 	"\rserverVersion\x18\x02 \x01(\tR\rserverVersion\x12*\n" +
-	"\x10idempotencyToken\x18\x03 \x01(\tR\x10idempotencyToken2\xfa\x03\n" +
+	"\x10idempotencyToken\x18\x03 \x01(\tR\x10idempotencyToken*\x84\x02\n" +
+	"\x0fModelPromptType\x12\x1e\n" +
+	"\x1aModelPromptType_EARLY2000s\x10\x00\x12\x1c\n" +
+	"\x18ModelPromptType_UWUIFIED\x10\x01\x12\x18\n" +
+	"\x14ModelPromptType_NERD\x10\x02\x12\x1e\n" +
+	"\x1aModelPromptType_OLDENGLISH\x10\x03\x12\x18\n" +
+	"\x14ModelPromptType_NICE\x10\x04\x12 \n" +
+	"\x1cModelPromptType_REGINAGEORGE\x10\x05\x12\x1e\n" +
+	"\x1aModelPromptType_DISCORDMOD\x10\x06\x12\x1d\n" +
+	"\x19ModelPromptType_DCVILLIAN\x10\a2\xfa\x03\n" +
 	"\x0eOctoRoasterAPI\x12A\n" +
 	"\x04Ping\x12\x1b.roastedoctocat.PingRequest\x1a\x1c.roastedoctocat.PingResponse\x12D\n" +
 	"\x05OAuth\x12\x1c.roastedoctocat.OAuthRequest\x1a\x1d.roastedoctocat.OAuthResponse\x12H\n" +
@@ -680,38 +764,41 @@ func file_proto_roasted_octocat_proto_rawDescGZIP() []byte {
 	return file_proto_roasted_octocat_proto_rawDescData
 }
 
+var file_proto_roasted_octocat_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_proto_roasted_octocat_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_proto_roasted_octocat_proto_goTypes = []any{
-	(*GetParsedGithubResultRequest)(nil),  // 0: roastedoctocat.GetParsedGithubResultRequest
-	(*GetParsedGithubResultResponse)(nil), // 1: roastedoctocat.GetParsedGithubResultResponse
-	(*ParseGithubRequest)(nil),            // 2: roastedoctocat.ParseGithubRequest
-	(*ParseGithubResponse)(nil),           // 3: roastedoctocat.ParseGithubResponse
-	(*WhoAmIRequest)(nil),                 // 4: roastedoctocat.WhoAmIRequest
-	(*WhoAmIResponse)(nil),                // 5: roastedoctocat.WhoAmIResponse
-	(*RefreshRequest)(nil),                // 6: roastedoctocat.RefreshRequest
-	(*OAuthRequest)(nil),                  // 7: roastedoctocat.OAuthRequest
-	(*OAuthResponse)(nil),                 // 8: roastedoctocat.OAuthResponse
-	(*PingRequest)(nil),                   // 9: roastedoctocat.PingRequest
-	(*PingResponse)(nil),                  // 10: roastedoctocat.PingResponse
+	(ModelPromptType)(0),                  // 0: roastedoctocat.ModelPromptType
+	(*GetParsedGithubResultRequest)(nil),  // 1: roastedoctocat.GetParsedGithubResultRequest
+	(*GetParsedGithubResultResponse)(nil), // 2: roastedoctocat.GetParsedGithubResultResponse
+	(*ParseGithubRequest)(nil),            // 3: roastedoctocat.ParseGithubRequest
+	(*ParseGithubResponse)(nil),           // 4: roastedoctocat.ParseGithubResponse
+	(*WhoAmIRequest)(nil),                 // 5: roastedoctocat.WhoAmIRequest
+	(*WhoAmIResponse)(nil),                // 6: roastedoctocat.WhoAmIResponse
+	(*RefreshRequest)(nil),                // 7: roastedoctocat.RefreshRequest
+	(*OAuthRequest)(nil),                  // 8: roastedoctocat.OAuthRequest
+	(*OAuthResponse)(nil),                 // 9: roastedoctocat.OAuthResponse
+	(*PingRequest)(nil),                   // 10: roastedoctocat.PingRequest
+	(*PingResponse)(nil),                  // 11: roastedoctocat.PingResponse
 }
 var file_proto_roasted_octocat_proto_depIdxs = []int32{
-	9,  // 0: roastedoctocat.OctoRoasterAPI.Ping:input_type -> roastedoctocat.PingRequest
-	7,  // 1: roastedoctocat.OctoRoasterAPI.OAuth:input_type -> roastedoctocat.OAuthRequest
-	6,  // 2: roastedoctocat.OctoRoasterAPI.Refresh:input_type -> roastedoctocat.RefreshRequest
-	4,  // 3: roastedoctocat.OctoRoasterAPI.WhoAmI:input_type -> roastedoctocat.WhoAmIRequest
-	2,  // 4: roastedoctocat.OctoRoasterAPI.ParseGithub:input_type -> roastedoctocat.ParseGithubRequest
-	0,  // 5: roastedoctocat.OctoRoasterAPI.GetParsedGithubResult:input_type -> roastedoctocat.GetParsedGithubResultRequest
-	10, // 6: roastedoctocat.OctoRoasterAPI.Ping:output_type -> roastedoctocat.PingResponse
-	8,  // 7: roastedoctocat.OctoRoasterAPI.OAuth:output_type -> roastedoctocat.OAuthResponse
-	8,  // 8: roastedoctocat.OctoRoasterAPI.Refresh:output_type -> roastedoctocat.OAuthResponse
-	5,  // 9: roastedoctocat.OctoRoasterAPI.WhoAmI:output_type -> roastedoctocat.WhoAmIResponse
-	3,  // 10: roastedoctocat.OctoRoasterAPI.ParseGithub:output_type -> roastedoctocat.ParseGithubResponse
-	1,  // 11: roastedoctocat.OctoRoasterAPI.GetParsedGithubResult:output_type -> roastedoctocat.GetParsedGithubResultResponse
-	6,  // [6:12] is the sub-list for method output_type
-	0,  // [0:6] is the sub-list for method input_type
-	0,  // [0:0] is the sub-list for extension type_name
-	0,  // [0:0] is the sub-list for extension extendee
-	0,  // [0:0] is the sub-list for field type_name
+	0,  // 0: roastedoctocat.ParseGithubRequest.promptType:type_name -> roastedoctocat.ModelPromptType
+	10, // 1: roastedoctocat.OctoRoasterAPI.Ping:input_type -> roastedoctocat.PingRequest
+	8,  // 2: roastedoctocat.OctoRoasterAPI.OAuth:input_type -> roastedoctocat.OAuthRequest
+	7,  // 3: roastedoctocat.OctoRoasterAPI.Refresh:input_type -> roastedoctocat.RefreshRequest
+	5,  // 4: roastedoctocat.OctoRoasterAPI.WhoAmI:input_type -> roastedoctocat.WhoAmIRequest
+	3,  // 5: roastedoctocat.OctoRoasterAPI.ParseGithub:input_type -> roastedoctocat.ParseGithubRequest
+	1,  // 6: roastedoctocat.OctoRoasterAPI.GetParsedGithubResult:input_type -> roastedoctocat.GetParsedGithubResultRequest
+	11, // 7: roastedoctocat.OctoRoasterAPI.Ping:output_type -> roastedoctocat.PingResponse
+	9,  // 8: roastedoctocat.OctoRoasterAPI.OAuth:output_type -> roastedoctocat.OAuthResponse
+	9,  // 9: roastedoctocat.OctoRoasterAPI.Refresh:output_type -> roastedoctocat.OAuthResponse
+	6,  // 10: roastedoctocat.OctoRoasterAPI.WhoAmI:output_type -> roastedoctocat.WhoAmIResponse
+	4,  // 11: roastedoctocat.OctoRoasterAPI.ParseGithub:output_type -> roastedoctocat.ParseGithubResponse
+	2,  // 12: roastedoctocat.OctoRoasterAPI.GetParsedGithubResult:output_type -> roastedoctocat.GetParsedGithubResultResponse
+	7,  // [7:13] is the sub-list for method output_type
+	1,  // [1:7] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_proto_roasted_octocat_proto_init() }
@@ -725,13 +812,14 @@ func file_proto_roasted_octocat_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_roasted_octocat_proto_rawDesc), len(file_proto_roasted_octocat_proto_rawDesc)),
-			NumEnums:      0,
+			NumEnums:      1,
 			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_proto_roasted_octocat_proto_goTypes,
 		DependencyIndexes: file_proto_roasted_octocat_proto_depIdxs,
+		EnumInfos:         file_proto_roasted_octocat_proto_enumTypes,
 		MessageInfos:      file_proto_roasted_octocat_proto_msgTypes,
 	}.Build()
 	File_proto_roasted_octocat_proto = out.File

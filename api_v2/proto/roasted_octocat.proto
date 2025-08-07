@@ -22,9 +22,21 @@ message GetParsedGithubResultResponse {
 	optional string error = 3;
 }
 
+enum ModelPromptType {
+	ModelPromptType_EARLY2000s = 0;
+	ModelPromptType_UWUIFIED = 1;
+	ModelPromptType_NERD = 2;
+	ModelPromptType_OLDENGLISH = 3;
+	ModelPromptType_NICE = 4;
+	ModelPromptType_REGINAGEORGE = 5;
+	ModelPromptType_DISCORDMOD = 6;
+	ModelPromptType_DCVILLIAN = 7;
+}
+
 message ParseGithubRequest {
 	string githubToken = 1;
 	string idempotencyToken = 2;
+	ModelPromptType promptType = 3;
 }
 
 message ParseGithubResponse {

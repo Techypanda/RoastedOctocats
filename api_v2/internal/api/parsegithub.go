@@ -30,32 +30,45 @@ type GenAIJsonInput struct {
 
 var errInternal = errors.New("an internal server error occured, please retry")
 
+const maxPagesOfIteration = 10 // at most 10 pages for now
 func callRelevantGithubAPIS(j octocatGrpcParseGithubJobWorkerParam) (*string, error) {
 	client := github.New()
 	page := 1
 	pageSize := 100
-	resp, err := client.ListEvents(igithub.GithubListEventsRequest{
-		Username:   j.Username,
-		OAuthToken: j.githubOAuthToken,
-		Page:       &page,
-		PageSize:   &pageSize,
-	})
-	if err != nil {
-		slog.Error("failed to do listevents", "err", err)
-		return nil, errInternal
-	}
 	var commitDetails []CommitDetails
-	for _, item := range *resp {
-		curr := CommitDetails{
-			RepoName:       item.Repo.Name,
-			CommitMessages: []string{},
+	for {
+		resp, err := client.ListEvents(igithub.GithubListEventsRequest{
+			Username:   j.Username,
+			OAuthToken: j.githubOAuthToken,
+			Page:       &page,
+			PageSize:   &pageSize,
+		})
+		if err != nil {
+			slog.Error("failed to do listevents", "err", err)
+			return nil, errInternal
 		}
-		if item.Type == igithub.PushEventType {
-			for _, commit := range item.Payload.Commits {
-				curr.CommitMessages = append(curr.CommitMessages, commit.Message)
+		if resp != nil {
+			for _, item := range *resp {
+				curr := CommitDetails{
+					RepoName:       item.Repo.Name,
+					CommitMessages: []string{},
+				}
+				if item.Type == igithub.PushEventType {
+					for _, commit := range item.Payload.Commits {
+						curr.CommitMessages = append(curr.CommitMessages, commit.Message)
+					}
+					commitDetails = append(commitDetails, curr)
+				} else {
+					slog.Debug("filtering out event from list event.", "item", item)
+				}
 			}
+			if len(*resp) == 0 || page == maxPagesOfIteration {
+				break
+			}
+			page++
+		} else {
+			break
 		}
-		commitDetails = append(commitDetails, curr)
 	}
 	jsonified, _ := json.Marshal(&GenAIJsonInput{
 		Username:   j.Username,
@@ -66,7 +79,7 @@ func callRelevantGithubAPIS(j octocatGrpcParseGithubJobWorkerParam) (*string, er
 	return &strVers, nil
 }
 
-func callAzureOpenAi(input string) (*string, error) {
+func callAzureOpenAi(promptType proto.ModelPromptType, input string) (*string, error) {
 	credential, err := azidentity.NewDefaultAzureCredential(&azidentity.DefaultAzureCredentialOptions{
 		TenantID: "5f45a518-36c3-406f-92fa-6f74ac0ea00f",
 	})
@@ -78,18 +91,19 @@ func callAzureOpenAi(input string) (*string, error) {
 		azure.WithEndpoint("https://jonathan-testing-ai.openai.azure.com/", "2024-08-01-preview"),
 		azure.WithTokenCredential(credential),
 	)
-	return askOpenAiPrompt(&client, "gpt-4o", input)
+	return askOpenAiPrompt(promptType, &client, "gpt-4o", input)
 }
 
-func askOpenAiPrompt(client *openai.Client, model string, input string) (*string, error) {
+func askOpenAiPrompt(promptType proto.ModelPromptType, client *openai.Client, model string, input string) (*string, error) {
 	chatParams := openai.ChatCompletionNewParams{
-		Model:     openai.ChatModel(model),
-		MaxTokens: openai.Int(512),
+		Model: openai.ChatModel(model),
+		// MaxTokens:           openai.Int(25000),
+		MaxCompletionTokens: openai.Int(16384),
 		Messages: []openai.ChatCompletionMessageParamUnion{
 			{
 				OfAssistant: &openai.ChatCompletionAssistantMessageParam{
 					Content: openai.ChatCompletionAssistantMessageParamContentUnion{
-						OfString: openai.String(config.New().GetModelPrompt()),
+						OfString: openai.String(config.New().GetModelPrompt(promptType)),
 					},
 				},
 			},
@@ -110,6 +124,7 @@ func askOpenAiPrompt(client *openai.Client, model string, input string) (*string
 		slog.Error("failed to call openai", "err", err)
 		return nil, errInternal
 	}
+	slog.Debug("OpenAI Response Generated", "resp", resp)
 	return &resp.Choices[0].Message.Content, nil
 }
 
@@ -139,7 +154,7 @@ func parseGithubWorker(ctx context.Context, id int, jobs chan octocatGrpcParseGi
 				}
 				return
 			}
-			aiResponse, err := callAzureOpenAi(*jsonData) // get ai response
+			aiResponse, err := callAzureOpenAi(job.PromptType, *jsonData) // get ai response
 			if err != nil {
 				errText := err.Error()
 				err := table.SetAnswer(ctx, job.Username, job.idempotencyToken, idb.Failed, &errText, nil)
@@ -173,8 +188,9 @@ func (o *octocatGrpcAPI) ParseGithub(ctx context.Context, req *proto.ParseGithub
 		return nil, err
 	}
 	o.workerPool.parseGithubJobs <- octocatGrpcParseGithubJobWorkerParam{
-		Username: resp.Username,
-		Bio:      resp.Bio,
+		Username:   resp.Username,
+		Bio:        resp.Bio,
+		PromptType: req.PromptType,
 		// sensitive do not log
 		idempotencyToken: req.IdempotencyToken,
 		githubOAuthToken: req.GithubToken,

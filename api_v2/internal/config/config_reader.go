@@ -9,13 +9,14 @@ import (
 	"strings"
 
 	"techytechster.com/roastedoctocats/pkg/iconfig"
+	"techytechster.com/roastedoctocats/pkg/proto"
 )
 
 type jsonConfigReader struct {
 }
 
-func (j *jsonConfigReader) GetModelPrompt() string {
-	return modelPrompt
+func (j *jsonConfigReader) GetModelPrompt(promptType proto.ModelPromptType) string {
+	return prompts[promptType]
 }
 
 func getModuleRoot() (string, error) {

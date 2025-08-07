@@ -53,6 +53,10 @@ export interface ParseGithubRequest {
      * @generated from protobuf field: string idempotencyToken = 2
      */
     idempotencyToken: string;
+    /**
+     * @generated from protobuf field: roastedoctocat.ModelPromptType promptType = 3
+     */
+    promptType: ModelPromptType;
 }
 /**
  * @generated from protobuf message roastedoctocat.ParseGithubResponse
@@ -165,6 +169,43 @@ export interface PingResponse {
      * @generated from protobuf field: string idempotencyToken = 3
      */
     idempotencyToken: string;
+}
+/**
+ * @generated from protobuf enum roastedoctocat.ModelPromptType
+ */
+export enum ModelPromptType {
+    /**
+     * @generated from protobuf enum value: ModelPromptType_EARLY2000s = 0;
+     */
+    ModelPromptType_EARLY2000s = 0,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_UWUIFIED = 1;
+     */
+    ModelPromptType_UWUIFIED = 1,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_NERD = 2;
+     */
+    ModelPromptType_NERD = 2,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_OLDENGLISH = 3;
+     */
+    ModelPromptType_OLDENGLISH = 3,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_NICE = 4;
+     */
+    ModelPromptType_NICE = 4,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_REGINAGEORGE = 5;
+     */
+    ModelPromptType_REGINAGEORGE = 5,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_DISCORDMOD = 6;
+     */
+    ModelPromptType_DISCORDMOD = 6,
+    /**
+     * @generated from protobuf enum value: ModelPromptType_DCVILLIAN = 7;
+     */
+    ModelPromptType_DCVILLIAN = 7
 }
 // @generated message type with reflection information, may provide speed optimized methods
 class GetParsedGithubResultRequest$Type extends MessageType<GetParsedGithubResultRequest> {
@@ -287,13 +328,15 @@ class ParseGithubRequest$Type extends MessageType<ParseGithubRequest> {
     constructor() {
         super("roastedoctocat.ParseGithubRequest", [
             { no: 1, name: "githubToken", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
-            { no: 2, name: "idempotencyToken", kind: "scalar", T: 9 /*ScalarType.STRING*/ }
+            { no: 2, name: "idempotencyToken", kind: "scalar", T: 9 /*ScalarType.STRING*/ },
+            { no: 3, name: "promptType", kind: "enum", T: () => ["roastedoctocat.ModelPromptType", ModelPromptType] }
         ]);
     }
     create(value?: PartialMessage<ParseGithubRequest>): ParseGithubRequest {
         const message = globalThis.Object.create((this.messagePrototype!));
         message.githubToken = "";
         message.idempotencyToken = "";
+        message.promptType = 0;
         if (value !== undefined)
             reflectionMergePartial<ParseGithubRequest>(this, message, value);
         return message;
@@ -308,6 +351,9 @@ class ParseGithubRequest$Type extends MessageType<ParseGithubRequest> {
                     break;
                 case /* string idempotencyToken */ 2:
                     message.idempotencyToken = reader.string();
+                    break;
+                case /* roastedoctocat.ModelPromptType promptType */ 3:
+                    message.promptType = reader.int32();
                     break;
                 default:
                     let u = options.readUnknownField;
@@ -327,6 +373,9 @@ class ParseGithubRequest$Type extends MessageType<ParseGithubRequest> {
         /* string idempotencyToken = 2; */
         if (message.idempotencyToken !== "")
             writer.tag(2, WireType.LengthDelimited).string(message.idempotencyToken);
+        /* roastedoctocat.ModelPromptType promptType = 3; */
+        if (message.promptType !== 0)
+            writer.tag(3, WireType.Varint).int32(message.promptType);
         let u = options.writeUnknownFields;
         if (u !== false)
             (u == true ? UnknownFieldHandler.onWrite : u)(this.typeName, message, writer);
