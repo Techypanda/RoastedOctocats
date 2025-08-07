@@ -1,13 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net"
 	"os"
 	"strings"
 
+	"golang.org/x/time/rate"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
+	"google.golang.org/grpc/status"
 	"techytechster.com/roastedoctocats/internal/api"
 	"techytechster.com/roastedoctocats/pkg/proto"
 )
@@ -37,6 +42,27 @@ func getAddress() string {
 	return defaultAddress
 }
 
+var rateLimitedUsersMap map[string]*rate.Limiter = map[string]*rate.Limiter{}
+
+const rateLimit = 4
+const burstRateLimit = 8
+
+func rateLimiterInterceptor(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	if p, ok := peer.FromContext(ctx); ok {
+		ipAddress := strings.Split(p.Addr.String(), ":")[0]
+		slog.Debug("Checking rate limit for user...", "ip", ipAddress)
+		if _, exists := rateLimitedUsersMap[ipAddress]; !exists {
+			rateLimitedUsersMap[ipAddress] = rate.NewLimiter(rateLimit, burstRateLimit)
+		}
+		if !rateLimitedUsersMap[ipAddress].Allow() {
+			return nil, status.Errorf(codes.ResourceExhausted, "slowdown... you are being rate limited")
+		}
+		return handler(ctx, req)
+	} else {
+		return nil, status.Errorf(codes.Aborted, "please retry, we failed to read your peer information")
+	}
+}
+
 func main() {
 	logLevel := getLogLevel()
 	logOpts := &slog.HandlerOptions{
@@ -51,6 +77,7 @@ func main() {
 		return
 	}
 	var opts []grpc.ServerOption
+	opts = append(opts, grpc.UnaryInterceptor(rateLimiterInterceptor))
 	grpcServer := grpc.NewServer(opts...)
 	apiInstance, cancel := api.New()
 	defer cancel()

@@ -21,10 +21,10 @@ docker push octocatregistry.azurecr.io/octocatroasterenvoy:$epochTime
 echo "Building Frontend Code..."
 Push-Location
 Set-Location "../web"
-# npm run build
+npm run build
 Pop-Location
 echo "Now Deploying Main Infrastructure..."
 az deployment group create --name MainInfrastructure --resource-group $rgName --parameters epochTime=$epochTime --template-file main.bicep --mode Complete
 echo "Deploying frontend..."
-# az storage blob upload-batch --destination www --account-name octocatroaster --source ../web/dist --overwrite
-# Remove-Item "../web/dist" -Recurse -Force
+az storage blob upload-batch --destination www --account-name octocatroaster --source ../web/dist --overwrite
+Remove-Item "../web/dist" -Recurse -Force
